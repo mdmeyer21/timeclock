@@ -6,41 +6,41 @@
   <title>Time Clock</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
-    body{min-height:100vh;background:#07070f;color:#ddd8cc;font-family:Georgia,'Times New Roman',serif;display:flex;flex-direction:column;align-items:center;}
+    body{min-height:100vh;background:#f4f4f0;color:#1a1a2a;font-family:Georgia,'Times New Roman',serif;display:flex;flex-direction:column;align-items:center;}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 
     /* TOP BAR */
-    #topbar{width:100%;background:#0b0b18;border-bottom:1px solid #1e1e30;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;}
-    #topbar .label{font-size:10px;letter-spacing:.4em;color:#4a4a6a;text-transform:uppercase;}
+    #topbar{width:100%;background:#ffffff;border-bottom:1px solid #e0e0d8;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;}
+    #topbar .label{font-size:10px;letter-spacing:.4em;color:#aaaaaa;text-transform:uppercase;}
     #connection-status{font-size:11px;margin-top:2px;display:flex;align-items:center;gap:5px;}
     #status-dot{width:5px;height:5px;border-radius:50%;display:inline-block;}
-    #connect-btn{background:none;border:1px solid #2a2a3a;border-radius:6px;color:#7a7a9a;cursor:pointer;padding:7px 14px;font-size:11px;letter-spacing:.15em;font-family:inherit;}
+    #connect-btn{background:none;border:1px solid #cccccc;border-radius:6px;color:#666666;cursor:pointer;padding:7px 14px;font-size:11px;letter-spacing:.15em;font-family:inherit;}
 
     /* TABS */
-    #tab-bar{width:100%;background:#0b0b18;border-bottom:1px solid #1e1e30;display:flex;}
-    .tab{flex:1;padding:14px;text-align:center;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:#4a4a6a;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;}
-    .tab.active{color:#c8b4a0;border-bottom:2px solid #c8b4a0;}
-    .tab:hover:not(.active){color:#7a7a9a;}
+    #tab-bar{width:100%;background:#ffffff;border-bottom:1px solid #e0e0d8;display:flex;}
+    .tab{flex:1;padding:14px;text-align:center;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:#aaaaaa;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;}
+    .tab.active{color:#1a6b35;border-bottom:2px solid #1a6b35;}
+    .tab:hover:not(.active){color:#444444;}
 
     /* SETUP PANEL */
-    #setup-panel{width:100%;background:#0d0d1e;border-bottom:1px solid #1e1e35;padding:20px 24px;display:none;}
+    #setup-panel{width:100%;background:#f0f0ea;border-bottom:1px solid #e0e0d8;padding:20px 24px;display:none;}
     #setup-panel .inner{max-width:640px;margin:0 auto;}
-    .setup-intro{font-size:13px;color:#8a8aaa;margin-bottom:16px;line-height:1.7;}
-    .step-label{font-size:11px;color:#5a5a8a;letter-spacing:.2em;text-transform:uppercase;margin-bottom:6px;}
+    .setup-intro{font-size:13px;color:#555555;margin-bottom:16px;line-height:1.7;}
+    .step-label{font-size:11px;color:#888888;letter-spacing:.2em;text-transform:uppercase;margin-bottom:6px;}
     .step{margin-bottom:14px;}
-    .step a{color:#7a9acc;font-size:13px;}
-    .step .muted{color:#4a4a6a;font-size:13px;}
-    .step .note{font-size:13px;color:#7a7a9a;margin-bottom:8px;}
-    .step .note b{color:#9a9aba;}
-    #toggle-script-btn{background:none;border:1px solid #2a2a4a;border-radius:5px;color:#7a7aaa;cursor:pointer;padding:6px 12px;font-size:11px;font-family:inherit;margin-bottom:8px;}
+    .step a{color:#1a6b9a;font-size:13px;}
+    .step .muted{color:#666666;font-size:13px;}
+    .step .note{font-size:13px;color:#444444;margin-bottom:8px;}
+    .step .note b{color:#1a1a4a;}
+    #toggle-script-btn{background:none;border:1px solid #bbbbbb;border-radius:5px;color:#555555;cursor:pointer;padding:6px 12px;font-size:11px;font-family:inherit;margin-bottom:8px;}
     #script-box{position:relative;display:none;}
-    #script-box pre{background:#0a0a18;border:1px solid #1e1e35;border-radius:6px;padding:12px;font-size:10px;color:#7a9a7a;overflow-x:auto;white-space:pre-wrap;word-break:break-all;}
-    #copy-script-btn{position:absolute;top:8px;right:8px;background:#1a1a2e;border:1px solid #2a2a4a;border-radius:4px;color:#7a7aaa;cursor:pointer;padding:4px 10px;font-size:10px;font-family:inherit;}
-    .deploy-note{font-size:12px;color:#5a5a7a;margin-top:8px;}
-    .deploy-note b{color:#9a9aba;}
+    #script-box pre{background:#e8e8e2;border:1px solid #cccccc;border-radius:6px;padding:12px;font-size:10px;color:#2a6a2a;overflow-x:auto;white-space:pre-wrap;word-break:break-all;}
+    #copy-script-btn{position:absolute;top:8px;right:8px;background:#ffffff;border:1px solid #bbbbbb;border-radius:4px;color:#555555;cursor:pointer;padding:4px 10px;font-size:10px;font-family:inherit;}
+    .deploy-note{font-size:12px;color:#777777;margin-top:8px;}
+    .deploy-note b{color:#1a1a4a;}
     #webhook-row{display:flex;gap:8px;}
-    #webhook-input{flex:1;background:#0a0a18;border:1px solid #2a2a4a;border-radius:6px;color:#c8c4b8;padding:10px 12px;font-size:12px;font-family:inherit;outline:none;}
-    #save-webhook-btn{background:rgba(74,154,90,.15);border:1px solid #2a5a30;border-radius:6px;color:#4a9a5a;cursor:pointer;padding:10px 18px;font-size:12px;font-family:inherit;}
+    #webhook-input{flex:1;background:#ffffff;border:1px solid #cccccc;border-radius:6px;color:#1a1a1a;padding:10px 12px;font-size:12px;font-family:inherit;outline:none;}
+    #save-webhook-btn{background:rgba(26,107,53,.12);border:1px solid #1a6b35;border-radius:6px;color:#1a6b35;cursor:pointer;padding:10px 18px;font-size:12px;font-family:inherit;}
 
     /* PAGES */
     .page{width:100%;max-width:660px;padding:28px 20px;display:none;}
@@ -48,53 +48,53 @@
 
     /* CLOCK PAGE */
     #clock-display{text-align:center;margin-bottom:28px;}
-    #big-clock{font-size:54px;letter-spacing:.06em;color:#b8a898;font-variant-numeric:tabular-nums;}
-    #big-date{font-size:12px;color:#4a4a6a;letter-spacing:.2em;margin-top:4px;}
+    #big-clock{font-size:54px;letter-spacing:.06em;color:#1a1a1a;font-variant-numeric:tabular-nums;}
+    #big-date{font-size:12px;color:#aaaaaa;letter-spacing:.2em;margin-top:4px;}
     #main-card{border-radius:14px;padding:28px;margin-bottom:20px;text-align:center;position:relative;overflow:hidden;transition:background .3s,border .3s;}
     #card-glow{position:absolute;top:0;left:20%;right:20%;height:1px;}
     #status-label{display:inline-flex;align-items:center;gap:7px;font-size:10px;letter-spacing:.4em;text-transform:uppercase;margin-bottom:20px;}
     #status-dot-card{width:6px;height:6px;border-radius:50%;}
     #clocked-in-info{margin-bottom:20px;display:none;}
-    #clocked-in-label{font-size:12px;color:#4a6a4a;letter-spacing:.15em;margin-bottom:6px;}
-    #clocked-in-time{font-size:44px;color:#b8ccb0;font-variant-numeric:tabular-nums;letter-spacing:.06em;}
-    #clocked-in-date{font-size:11px;color:#3a5a3a;margin-top:6px;}
-    #clocked-in-hint{font-size:11px;color:#2a4a2a;margin-top:4px;}
-    #note-area{width:100%;background:rgba(255,255,255,.03);border:1px solid #253525;border-radius:6px;color:#8aaa88;padding:9px 12px;font-size:12px;font-family:inherit;resize:none;margin-bottom:18px;outline:none;display:none;}
+    #clocked-in-label{font-size:12px;color:#1a6b35;letter-spacing:.15em;margin-bottom:6px;}
+    #clocked-in-time{font-size:44px;color:#1a1a1a;font-variant-numeric:tabular-nums;letter-spacing:.06em;}
+    #clocked-in-date{font-size:11px;color:#888888;margin-top:6px;}
+    #clocked-in-hint{font-size:11px;color:#aaaaaa;margin-top:4px;}
+    #note-area{width:100%;background:#f8f8f4;border:1px solid #ccddcc;border-radius:6px;color:#336633;padding:9px 12px;font-size:12px;font-family:inherit;resize:none;margin-bottom:18px;outline:none;display:none;}
     #clock-btn{padding:13px 52px;font-size:12px;letter-spacing:.3em;text-transform:uppercase;border-radius:7px;cursor:pointer;font-family:inherit;transition:all .2s;}
     #sync-status{margin-top:12px;font-size:11px;letter-spacing:.2em;display:none;}
     #stats{display:flex;gap:10px;margin-bottom:20px;}
-    .stat-box{flex:1;background:#0b0b18;border:1px solid #191928;border-radius:8px;padding:14px 10px;text-align:center;}
-    .stat-value{font-size:18px;color:#b8a898;font-variant-numeric:tabular-nums;}
-    .stat-label{font-size:10px;color:#3a3a5a;letter-spacing:.2em;text-transform:uppercase;margin-top:3px;}
+    .stat-box{flex:1;background:#ffffff;border:1px solid #e0e0d8;border-radius:8px;padding:14px 10px;text-align:center;}
+    .stat-value{font-size:18px;color:#1a1a1a;font-variant-numeric:tabular-nums;}
+    .stat-label{font-size:10px;color:#aaaaaa;letter-spacing:.2em;text-transform:uppercase;margin-top:3px;}
 
     /* HISTORY PAGE */
-    #history-empty{text-align:center;color:#2a2a4a;padding:60px 20px;font-size:13px;line-height:1.8;}
-    .session-card{background:#0c0c1a;border:1px solid #1a1a2e;border-radius:12px;margin-bottom:14px;overflow:hidden;}
-    .session-card.active-session{border-color:#253525;}
+    #history-empty{text-align:center;color:#cccccc;padding:60px 20px;font-size:13px;line-height:1.8;}
+    .session-card{background:#ffffff;border:1px solid #e0e0d8;border-radius:12px;margin-bottom:14px;overflow:hidden;}
+    .session-card.active-session{border-color:#1a6b35;}
     .session-header{padding:16px 18px 12px;display:flex;justify-content:space-between;align-items:flex-start;}
     .session-date-group{display:flex;flex-direction:column;gap:3px;}
-    .session-day{font-size:15px;color:#c8b4a0;font-weight:normal;}
-    .session-full-date{font-size:11px;color:#4a4a6a;letter-spacing:.1em;}
+    .session-day{font-size:15px;color:#1a1a1a;font-weight:normal;}
+    .session-full-date{font-size:11px;color:#aaaaaa;letter-spacing:.1em;}
     .session-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
-    .session-duration-big{font-size:22px;color:#b8ccb0;font-variant-numeric:tabular-nums;letter-spacing:.04em;}
-    .session-duration-label{font-size:9px;color:#3a5a3a;letter-spacing:.25em;text-transform:uppercase;}
-    .session-divider{height:1px;background:#141424;margin:0 18px;}
+    .session-duration-big{font-size:22px;color:#1a6b35;font-variant-numeric:tabular-nums;letter-spacing:.04em;}
+    .session-duration-label{font-size:9px;color:#aaaaaa;letter-spacing:.25em;text-transform:uppercase;}
+    .session-divider{height:1px;background:#eeeeea;margin:0 18px;}
     .session-body{padding:14px 18px;}
     .time-row{display:flex;gap:24px;margin-bottom:8px;flex-wrap:wrap;}
     .time-block{display:flex;flex-direction:column;gap:2px;}
-    .time-block-label{font-size:9px;color:#3a3a5a;letter-spacing:.3em;text-transform:uppercase;}
-    .time-block-value{font-size:14px;color:#b8a898;font-variant-numeric:tabular-nums;}
-    .session-note{font-size:11px;color:#4a4a6a;font-style:italic;margin-top:6px;padding-top:8px;border-top:1px solid #141424;}
-    .session-footer{display:flex;justify-content:space-between;align-items:center;padding:10px 18px;border-top:1px solid #0f0f1e;}
+    .time-block-label{font-size:9px;color:#aaaaaa;letter-spacing:.3em;text-transform:uppercase;}
+    .time-block-value{font-size:14px;color:#1a1a1a;font-variant-numeric:tabular-nums;}
+    .session-note{font-size:11px;color:#777777;font-style:italic;margin-top:6px;padding-top:8px;border-top:1px solid #eeeeea;}
+    .session-footer{display:flex;justify-content:space-between;align-items:center;padding:10px 18px;border-top:1px solid #eeeeea;}
     .session-badges{display:flex;gap:6px;align-items:center;}
-    .badge-active{font-size:8px;letter-spacing:.3em;text-transform:uppercase;color:#4a9a5a;border:1px solid #2a5a30;border-radius:3px;padding:2px 6px;}
-    .badge-synced{font-size:9px;color:#3a7a4a;}
-    .badge-unsynced{font-size:9px;color:#5a5a3a;}
-    .session-delete{background:none;border:none;color:#2a2a4a;cursor:pointer;font-size:15px;padding:2px 6px;transition:color .2s;font-family:inherit;}
-    .session-delete:hover{color:#7a3a3a;}
+    .badge-active{font-size:8px;letter-spacing:.3em;text-transform:uppercase;color:#1a6b35;border:1px solid #aaddbb;border-radius:3px;padding:2px 6px;}
+    .badge-synced{font-size:9px;color:#1a6b35;}
+    .badge-unsynced{font-size:9px;color:#cc8833;}
+    .session-delete{background:none;border:none;color:#cccccc;cursor:pointer;font-size:15px;padding:2px 6px;transition:color .2s;font-family:inherit;}
+    .session-delete:hover{color:#cc3333;}
 
     #history-clear-wrap{text-align:center;margin-top:8px;padding-bottom:10px;display:none;}
-    #history-clear-btn{background:none;border:none;color:#2a2a4a;cursor:pointer;font-size:10px;letter-spacing:.2em;text-transform:uppercase;font-family:inherit;text-decoration:underline;}
+    #history-clear-btn{background:none;border:none;color:#cccccc;cursor:pointer;font-size:10px;letter-spacing:.2em;text-transform:uppercase;font-family:inherit;text-decoration:underline;}
   </style>
 </head>
 <body>
@@ -177,7 +177,7 @@
 
 <!-- HISTORY PAGE -->
 <div id="page-history" class="page">
-  <div id="history-empty">No sessions yet.<br><span style="color:#1e1e3a;font-size:11px;">Clock in and out to see your history here.</span></div>
+  <div id="history-empty">No sessions yet.<br><span style="color:#cccccc;font-size:11px;">Clock in and out to see your history here.</span></div>
   <div id="history-list"></div>
   <div id="history-clear-wrap"><button id="history-clear-btn">Clear All History</button></div>
 </div>
@@ -315,26 +315,26 @@ function renderClock(){
   const btn=document.getElementById('clock-btn');
 
   if(isClockedIn){
-    card.style.background='linear-gradient(135deg,#0c1c10 0%,#090f0a 100%)';
-    card.style.border='1px solid #253525';
-    glow.style.background='linear-gradient(90deg,transparent,#3a7a45,transparent)';
-    dot.style.background='#4a9a5a'; dot.style.boxShadow='0 0 8px #4a9a5a80'; dot.style.animation='pulse 2s infinite';
-    labelEl.style.color='#4a9a5a'; labelTxt.textContent='Session in Progress';
+    card.style.background='linear-gradient(135deg,#eef8f1 0%,#f4faf6 100%)';
+    card.style.border='1px solid #1a6b35';
+    glow.style.background='linear-gradient(90deg,transparent,#1a6b35,transparent)';
+    dot.style.background='#1a6b35'; dot.style.boxShadow='0 0 8px #1a6b3550'; dot.style.animation='pulse 2s infinite';
+    labelEl.style.color='#1a6b35'; labelTxt.textContent='Session in Progress';
     infoBox.style.display='block'; noteArea.style.display='block';
-    btn.style.border='1px solid #3a7a45'; btn.style.background='rgba(58,122,69,0.12)'; btn.style.color='#5aaa6a'; btn.textContent='Clock Out';
+    btn.style.border='1px solid #1a6b35'; btn.style.background='rgba(26,107,53,0.10)'; btn.style.color='#1a6b35'; btn.textContent='Clock Out';
     if(activeEntry){
       const ci=new Date(activeEntry.clockIn);
       document.getElementById('clocked-in-time').textContent=formatTime(ci);
       document.getElementById('clocked-in-date').textContent=formatDate(ci);
     }
   } else {
-    card.style.background='linear-gradient(135deg,#180d0d 0%,#0f0909 100%)';
-    card.style.border='1px solid #352020';
-    glow.style.background='linear-gradient(90deg,transparent,#7a3535,transparent)';
-    dot.style.background='#8a4a4a'; dot.style.boxShadow='none'; dot.style.animation='none';
-    labelEl.style.color='#8a4a4a'; labelTxt.textContent='Ready to Clock In';
+    card.style.background='linear-gradient(135deg,#fff8f5 0%,#fff4f2 100%)';
+    card.style.border='1px solid #e0a090';
+    glow.style.background='linear-gradient(90deg,transparent,#cc5533,transparent)';
+    dot.style.background='#cc5533'; dot.style.boxShadow='none'; dot.style.animation='none';
+    labelEl.style.color='#cc5533'; labelTxt.textContent='Ready to Clock In';
     infoBox.style.display='none'; noteArea.style.display='none';
-    btn.style.border='1px solid #b06030'; btn.style.background='rgba(176,96,48,0.12)'; btn.style.color='#d07840'; btn.textContent='Clock In';
+    btn.style.border='1px solid #cc5533'; btn.style.background='rgba(204,85,51,0.10)'; btn.style.color='#cc5533'; btn.textContent='Clock In';
   }
 
   const completed=entries.filter(e=>e.clockOut);
@@ -343,7 +343,7 @@ function renderClock(){
   document.getElementById('stat-total').textContent=formatDurationShort(totalMs);
   const sheetsEl=document.getElementById('stat-sheets');
   sheetsEl.textContent=connected?'✓ Live':'—';
-  sheetsEl.style.color=connected?'#4a9a5a':'#b8a898';
+  sheetsEl.style.color=connected?'#1a6b35':'#aaaaaa';
 }
 
 // ── Render History Tab ────────────────────────────────────
@@ -404,7 +404,7 @@ function renderHistory(){
           </div>
           <div class="time-block">
             <div class="time-block-label">Total Time</div>
-            <div class="time-block-value" style="color:#9abaaa">${formatDuration(ms)}</div>
+            <div class="time-block-value" style="color:#1a6b35">${formatDuration(ms)}</div>
           </div>`:''}
         </div>
         ${noteHtml}
@@ -457,9 +457,9 @@ async function handleClockOut(){
 
 function showSync(s){
   const el=document.getElementById('sync-status'); el.style.display='block';
-  if(s==='syncing'){el.style.color='#7a7a9a';el.textContent='↑ Syncing to Google Sheets...';}
-  else if(s==='ok'){el.style.color='#4a9a5a';el.textContent='✓ Logged to Google Sheets';}
-  else{el.style.color='#9a4a4a';el.textContent='✕ Sync failed — check your URL in settings';}
+  if(s==='syncing'){el.style.color='#888888';el.textContent='↑ Syncing to Google Sheets...';}
+  else if(s==='ok'){el.style.color='#1a6b35';el.textContent='✓ Logged to Google Sheets';}
+  else{el.style.color='#cc3333';el.textContent='✕ Sync failed — check your URL in settings';}
 }
 
 // ── Tab switching ─────────────────────────────────────────
