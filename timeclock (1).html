@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Time Clock</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{min-height:100vh;background:#07070f;color:#ddd8cc;font-family:Georgia,'Times New Roman',serif;display:flex;flex-direction:column;align-items:center;}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+    /* TOP BAR */
+    #topbar{width:100%;background:#0b0b18;border-bottom:1px solid #1e1e30;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;}
+    #topbar .label{font-size:10px;letter-spacing:.4em;color:#4a4a6a;text-transform:uppercase;}
+    #connection-status{font-size:11px;margin-top:2px;display:flex;align-items:center;gap:5px;}
+    #status-dot{width:5px;height:5px;border-radius:50%;display:inline-block;}
+    #connect-btn{background:none;border:1px solid #2a2a3a;border-radius:6px;color:#7a7a9a;cursor:pointer;padding:7px 14px;font-size:11px;letter-spacing:.15em;font-family:inherit;}
+
+    /* TABS */
+    #tab-bar{width:100%;background:#0b0b18;border-bottom:1px solid #1e1e30;display:flex;}
+    .tab{flex:1;padding:14px;text-align:center;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:#4a4a6a;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;}
+    .tab.active{color:#c8b4a0;border-bottom:2px solid #c8b4a0;}
+    .tab:hover:not(.active){color:#7a7a9a;}
+
+    /* SETUP PANEL */
+    #setup-panel{width:100%;background:#0d0d1e;border-bottom:1px solid #1e1e35;padding:20px 24px;display:none;}
+    #setup-panel .inner{max-width:640px;margin:0 auto;}
+    .setup-intro{font-size:13px;color:#8a8aaa;margin-bottom:16px;line-height:1.7;}
+    .step-label{font-size:11px;color:#5a5a8a;letter-spacing:.2em;text-transform:uppercase;margin-bottom:6px;}
+    .step{margin-bottom:14px;}
+    .step a{color:#7a9acc;font-size:13px;}
+    .step .muted{color:#4a4a6a;font-size:13px;}
+    .step .note{font-size:13px;color:#7a7a9a;margin-bottom:8px;}
+    .step .note b{color:#9a9aba;}
+    #toggle-script-btn{background:none;border:1px solid #2a2a4a;border-radius:5px;color:#7a7aaa;cursor:pointer;padding:6px 12px;font-size:11px;font-family:inherit;margin-bottom:8px;}
+    #script-box{position:relative;display:none;}
+    #script-box pre{background:#0a0a18;border:1px solid #1e1e35;border-radius:6px;padding:12px;font-size:10px;color:#7a9a7a;overflow-x:auto;white-space:pre-wrap;word-break:break-all;}
+    #copy-script-btn{position:absolute;top:8px;right:8px;background:#1a1a2e;border:1px solid #2a2a4a;border-radius:4px;color:#7a7aaa;cursor:pointer;padding:4px 10px;font-size:10px;font-family:inherit;}
+    .deploy-note{font-size:12px;color:#5a5a7a;margin-top:8px;}
+    .deploy-note b{color:#9a9aba;}
+    #webhook-row{display:flex;gap:8px;}
+    #webhook-input{flex:1;background:#0a0a18;border:1px solid #2a2a4a;border-radius:6px;color:#c8c4b8;padding:10px 12px;font-size:12px;font-family:inherit;outline:none;}
+    #save-webhook-btn{background:rgba(74,154,90,.15);border:1px solid #2a5a30;border-radius:6px;color:#4a9a5a;cursor:pointer;padding:10px 18px;font-size:12px;font-family:inherit;}
+
+    /* PAGES */
+    .page{width:100%;max-width:660px;padding:28px 20px;display:none;}
+    .page.active{display:block;}
+
+    /* CLOCK PAGE */
+    #clock-display{text-align:center;margin-bottom:28px;}
+    #big-clock{font-size:54px;letter-spacing:.06em;color:#b8a898;font-variant-numeric:tabular-nums;}
+    #big-date{font-size:12px;color:#4a4a6a;letter-spacing:.2em;margin-top:4px;}
+    #main-card{border-radius:14px;padding:28px;margin-bottom:20px;text-align:center;position:relative;overflow:hidden;transition:background .3s,border .3s;}
+    #card-glow{position:absolute;top:0;left:20%;right:20%;height:1px;}
+    #status-label{display:inline-flex;align-items:center;gap:7px;font-size:10px;letter-spacing:.4em;text-transform:uppercase;margin-bottom:20px;}
+    #status-dot-card{width:6px;height:6px;border-radius:50%;}
+    #clocked-in-info{margin-bottom:20px;display:none;}
+    #clocked-in-label{font-size:12px;color:#4a6a4a;letter-spacing:.15em;margin-bottom:6px;}
+    #clocked-in-time{font-size:44px;color:#b8ccb0;font-variant-numeric:tabular-nums;letter-spacing:.06em;}
+    #clocked-in-date{font-size:11px;color:#3a5a3a;margin-top:6px;}
+    #clocked-in-hint{font-size:11px;color:#2a4a2a;margin-top:4px;}
+    #note-area{width:100%;background:rgba(255,255,255,.03);border:1px solid #253525;border-radius:6px;color:#8aaa88;padding:9px 12px;font-size:12px;font-family:inherit;resize:none;margin-bottom:18px;outline:none;display:none;}
+    #clock-btn{padding:13px 52px;font-size:12px;letter-spacing:.3em;text-transform:uppercase;border-radius:7px;cursor:pointer;font-family:inherit;transition:all .2s;}
+    #sync-status{margin-top:12px;font-size:11px;letter-spacing:.2em;display:none;}
+    #stats{display:flex;gap:10px;margin-bottom:20px;}
+    .stat-box{flex:1;background:#0b0b18;border:1px solid #191928;border-radius:8px;padding:14px 10px;text-align:center;}
+    .stat-value{font-size:18px;color:#b8a898;font-variant-numeric:tabular-nums;}
+    .stat-label{font-size:10px;color:#3a3a5a;letter-spacing:.2em;text-transform:uppercase;margin-top:3px;}
+
+    /* HISTORY PAGE */
+    #history-empty{text-align:center;color:#2a2a4a;padding:60px 20px;font-size:13px;line-height:1.8;}
+    .session-card{background:#0c0c1a;border:1px solid #1a1a2e;border-radius:12px;margin-bottom:14px;overflow:hidden;}
+    .session-card.active-session{border-color:#253525;}
+    .session-header{padding:16px 18px 12px;display:flex;justify-content:space-between;align-items:flex-start;}
+    .session-date-group{display:flex;flex-direction:column;gap:3px;}
+    .session-day{font-size:15px;color:#c8b4a0;font-weight:normal;}
+    .session-full-date{font-size:11px;color:#4a4a6a;letter-spacing:.1em;}
+    .session-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+    .session-duration-big{font-size:22px;color:#b8ccb0;font-variant-numeric:tabular-nums;letter-spacing:.04em;}
+    .session-duration-label{font-size:9px;color:#3a5a3a;letter-spacing:.25em;text-transform:uppercase;}
+    .session-divider{height:1px;background:#141424;margin:0 18px;}
+    .session-body{padding:14px 18px;}
+    .time-row{display:flex;gap:24px;margin-bottom:8px;flex-wrap:wrap;}
+    .time-block{display:flex;flex-direction:column;gap:2px;}
+    .time-block-label{font-size:9px;color:#3a3a5a;letter-spacing:.3em;text-transform:uppercase;}
+    .time-block-value{font-size:14px;color:#b8a898;font-variant-numeric:tabular-nums;}
+    .session-note{font-size:11px;color:#4a4a6a;font-style:italic;margin-top:6px;padding-top:8px;border-top:1px solid #141424;}
+    .session-footer{display:flex;justify-content:space-between;align-items:center;padding:10px 18px;border-top:1px solid #0f0f1e;}
+    .session-badges{display:flex;gap:6px;align-items:center;}
+    .badge-active{font-size:8px;letter-spacing:.3em;text-transform:uppercase;color:#4a9a5a;border:1px solid #2a5a30;border-radius:3px;padding:2px 6px;}
+    .badge-synced{font-size:9px;color:#3a7a4a;}
+    .badge-unsynced{font-size:9px;color:#5a5a3a;}
+    .session-delete{background:none;border:none;color:#2a2a4a;cursor:pointer;font-size:15px;padding:2px 6px;transition:color .2s;font-family:inherit;}
+    .session-delete:hover{color:#7a3a3a;}
+
+    #history-clear-wrap{text-align:center;margin-top:8px;padding-bottom:10px;display:none;}
+    #history-clear-btn{background:none;border:none;color:#2a2a4a;cursor:pointer;font-size:10px;letter-spacing:.2em;text-transform:uppercase;font-family:inherit;text-decoration:underline;}
+  </style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div>
+    <div class="label">Time Clock</div>
+    <div id="connection-status">
+      <span id="status-dot"></span>
+      <span id="status-text"></span>
+    </div>
+  </div>
+  <button id="connect-btn">⚙ Connect Sheets</button>
+</div>
+
+<!-- SETUP PANEL -->
+<div id="setup-panel">
+  <div class="inner">
+    <div class="setup-intro">Connect to Google Sheets in 3 steps:</div>
+    <div class="step">
+      <div class="step-label">Step 1 — Create a Google Sheet</div>
+      <a href="https://sheets.new" target="_blank">Open sheets.new</a>
+      <span class="muted"> to create a blank spreadsheet.</span>
+    </div>
+    <div class="step">
+      <div class="step-label">Step 2 — Add the Apps Script</div>
+      <div class="note">In your sheet: <b>Extensions → Apps Script</b>. Delete any code, paste the script below, click <b>Save</b>.</div>
+      <button id="toggle-script-btn">Show script</button>
+      <div id="script-box">
+        <pre id="script-text"></pre>
+        <button id="copy-script-btn">Copy</button>
+      </div>
+      <div class="deploy-note">Then: <b>Deploy → New deployment → Web app</b>. Set <i>Who has access</i> to <b>Anyone</b>. Copy the URL.</div>
+    </div>
+    <div class="step">
+      <div class="step-label">Step 3 — Paste the URL here</div>
+      <div id="webhook-row">
+        <input id="webhook-input" type="text" placeholder="https://script.google.com/macros/s/..."/>
+        <button id="save-webhook-btn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div id="tab-bar">
+  <div class="tab active" data-tab="clock">Clock</div>
+  <div class="tab" data-tab="history">History</div>
+</div>
+
+<!-- CLOCK PAGE -->
+<div id="page-clock" class="page active">
+  <div id="clock-display">
+    <div id="big-clock"></div>
+    <div id="big-date"></div>
+  </div>
+  <div id="main-card">
+    <div id="card-glow"></div>
+    <div id="status-label">
+      <span id="status-dot-card"></span>
+      <span id="status-label-text">Ready to Clock In</span>
+    </div>
+    <div id="clocked-in-info">
+      <div id="clocked-in-label">Clocked in at</div>
+      <div id="clocked-in-time"></div>
+      <div id="clocked-in-date"></div>
+      <div id="clocked-in-hint">Close the app anytime — your session is saved.</div>
+    </div>
+    <textarea id="note-area" rows="2" placeholder="Add a note for this session (optional)..."></textarea>
+    <button id="clock-btn">Clock In</button>
+    <div id="sync-status"></div>
+  </div>
+  <div id="stats">
+    <div class="stat-box"><div class="stat-value" id="stat-sessions">0</div><div class="stat-label">Sessions</div></div>
+    <div class="stat-box"><div class="stat-value" id="stat-total">—</div><div class="stat-label">Total Time</div></div>
+    <div class="stat-box"><div class="stat-value" id="stat-sheets">—</div><div class="stat-label">Sheets</div></div>
+  </div>
+</div>
+
+<!-- HISTORY PAGE -->
+<div id="page-history" class="page">
+  <div id="history-empty">No sessions yet.<br><span style="color:#1e1e3a;font-size:11px;">Clock in and out to see your history here.</span></div>
+  <div id="history-list"></div>
+  <div id="history-clear-wrap"><button id="history-clear-btn">Clear All History</button></div>
+</div>
+
+<script>
+const STORAGE_KEY = 'timeclock_entries_v2';
+const WEBHOOK_KEY  = 'timeclock_webhook_url';
+
+const SCRIPT_CODE = `function doPost(e) {
+  try {
+    var data = JSON.parse(e.postData.contents);
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var log = ss.getSheetByName("Time Log") || ss.insertSheet("Time Log");
+    if (log.getLastRow() === 0) {
+      log.appendRow(["Date", "Clock In", "Clock Out", "Duration (HH:MM:SS)", "Notes", "Hours (decimal)"]);
+      log.getRange(1,1,1,6).setFontWeight("bold").setBackground("#1a1a2e").setFontColor("#ffffff");
+      log.setColumnWidth(1, 160); log.setColumnWidth(4, 160); log.setColumnWidth(6, 130);
+    }
+    var row = log.getLastRow() + 1;
+    log.appendRow([data.date, data.clockIn, data.clockOut, data.duration, data.note]);
+    log.getRange(row, 6).setFormula('=IF(D'+row+'="","",IFERROR(VALUE(LEFT(D'+row+',2))+VALUE(MID(D'+row+',4,2))/60+VALUE(RIGHT(D'+row+',2))/3600,0))');
+    log.getRange(row, 6).setNumberFormat("0.00");
+    updateSummary(ss, log);
+    return ContentService.createTextOutput(JSON.stringify({status:"ok"})).setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({status:"error",message:err.toString()})).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function updateSummary(ss, log) {
+  var sum = ss.getSheetByName("Summary") || ss.insertSheet("Summary");
+  sum.clearContents(); sum.clearFormats();
+  var data = log.getDataRange().getValues();
+  if (data.length <= 1) return;
+  var dayMap = {}, weekMap = {};
+  for (var i = 1; i < data.length; i++) {
+    var dateStr = data[i][0], hrs = parseFloat(data[i][5]);
+    if (!dateStr || isNaN(hrs)) continue;
+    dayMap[dateStr] = (dayMap[dateStr] || 0) + hrs;
+    var d = new Date(dateStr), jan1 = new Date(d.getFullYear(), 0, 1);
+    var week = Math.ceil(((d - jan1) / 86400000 + jan1.getDay() + 1) / 7);
+    var wk = d.getFullYear() + "-W" + (week < 10 ? "0" + week : week);
+    weekMap[wk] = (weekMap[wk] || 0) + hrs;
+  }
+  sum.getRange(1,1).setValue("DAILY TOTALS").setFontWeight("bold").setFontSize(11);
+  sum.getRange(2,1,1,2).setValues([["Date","Hours"]]).setFontWeight("bold").setBackground("#1a1a2e").setFontColor("#ffffff");
+  var days = Object.keys(dayMap).sort();
+  for (var j = 0; j < days.length; j++) { sum.getRange(j+3,1).setValue(days[j]); sum.getRange(j+3,2).setValue(Math.round(dayMap[days[j]]*100)/100).setNumberFormat("0.00"); }
+  var dtr = days.length + 3;
+  sum.getRange(dtr,1).setValue("Total").setFontWeight("bold");
+  sum.getRange(dtr,2).setFormula("=SUM(B3:B"+(dtr-1)+")").setNumberFormat("0.00").setFontWeight("bold");
+  sum.getRange(1,4).setValue("WEEKLY TOTALS").setFontWeight("bold").setFontSize(11);
+  sum.getRange(2,4,1,2).setValues([["Week","Hours"]]).setFontWeight("bold").setBackground("#1a1a2e").setFontColor("#ffffff");
+  var weeks = Object.keys(weekMap).sort();
+  for (var k = 0; k < weeks.length; k++) { sum.getRange(k+3,4).setValue(weeks[k]); sum.getRange(k+3,5).setValue(Math.round(weekMap[weeks[k]]*100)/100).setNumberFormat("0.00"); }
+  var wtr = weeks.length + 3;
+  sum.getRange(wtr,4).setValue("Total").setFontWeight("bold");
+  sum.getRange(wtr,5).setFormula("=SUM(E3:E"+(wtr-1)+")").setNumberFormat("0.00").setFontWeight("bold");
+  sum.setColumnWidth(1,160); sum.setColumnWidth(2,90); sum.setColumnWidth(4,120); sum.setColumnWidth(5,90);
+}`;
+
+// ── Helpers ──────────────────────────────────────────────
+function pad(n){ return String(n).padStart(2,'0'); }
+function formatTime(date){
+  const h=date.getHours(), ampm=h>=12?'PM':'AM', h12=h%12||12;
+  return `${pad(h12)}:${pad(date.getMinutes())}:${pad(date.getSeconds())} ${ampm}`;
+}
+function formatDate(date){
+  return date.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+}
+function formatDayName(date){
+  return date.toLocaleDateString('en-US',{weekday:'long'});
+}
+function formatMonthDay(date){
+  return date.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+}
+function formatDuration(ms){
+  if(!ms||ms<0) return '—';
+  const s=Math.floor(ms/1000);
+  const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=s%60;
+  return `${pad(h)}h ${pad(m)}m ${pad(sec)}s`;
+}
+function formatDurationShort(ms){
+  if(!ms||ms<0) return '—';
+  const s=Math.floor(ms/1000);
+  return `${pad(Math.floor(s/3600))}h ${pad(Math.floor((s%3600)/60))}m`;
+}
+
+// ── State ─────────────────────────────────────────────────
+let entries=[], webhookUrl='', isClockedIn=false, activeEntry=null;
+
+function loadState(){
+  try{ entries=JSON.parse(localStorage.getItem(STORAGE_KEY))||[]; }catch{ entries=[]; }
+  webhookUrl=localStorage.getItem(WEBHOOK_KEY)||'';
+  const open=entries.find(e=>!e.clockOut);
+  if(open){ isClockedIn=true; activeEntry=open; }
+}
+function saveEntries(){ localStorage.setItem(STORAGE_KEY,JSON.stringify(entries)); }
+
+// ── Sheet sync ────────────────────────────────────────────
+async function sendToSheet(entry){
+  const ci=new Date(entry.clockIn), co=new Date(entry.clockOut);
+  const s=Math.floor((co-ci)/1000);
+  const dur=`${pad(Math.floor(s/3600))}:${pad(Math.floor((s%3600)/60))}:${pad(s%60)}`;
+  await fetch(webhookUrl,{
+    method:'POST',mode:'no-cors',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({date:formatDate(ci),clockIn:formatTime(ci),clockOut:formatTime(co),duration:dur,note:entry.note||''})
+  });
+}
+
+// ── Clock tick ────────────────────────────────────────────
+function updateClock(){
+  const now=new Date();
+  const h=now.getHours(), ampm=h>=12?'PM':'AM', h12=h%12||12;
+  document.getElementById('big-clock').textContent=`${pad(h12)}:${pad(now.getMinutes())}:${pad(now.getSeconds())} ${ampm}`;
+  document.getElementById('big-date').textContent=formatDate(now);
+}
+
+// ── Render Clock Tab ──────────────────────────────────────
+function renderClock(){
+  const connected=!!webhookUrl;
+  document.getElementById('status-dot').style.background=connected?'#4a9a5a':'#7a3a3a';
+  document.getElementById('status-text').textContent=connected?'Google Sheets connected':'Not connected to Google Sheets';
+  document.getElementById('status-text').style.color=connected?'#4a9a5a':'#5a3a3a';
+  document.getElementById('connect-btn').textContent=connected?'⚙ Reconnect':'⚙ Connect Sheets';
+
+  const card=document.getElementById('main-card');
+  const glow=document.getElementById('card-glow');
+  const dot=document.getElementById('status-dot-card');
+  const labelEl=document.getElementById('status-label');
+  const labelTxt=document.getElementById('status-label-text');
+  const infoBox=document.getElementById('clocked-in-info');
+  const noteArea=document.getElementById('note-area');
+  const btn=document.getElementById('clock-btn');
+
+  if(isClockedIn){
+    card.style.background='linear-gradient(135deg,#0c1c10 0%,#090f0a 100%)';
+    card.style.border='1px solid #253525';
+    glow.style.background='linear-gradient(90deg,transparent,#3a7a45,transparent)';
+    dot.style.background='#4a9a5a'; dot.style.boxShadow='0 0 8px #4a9a5a80'; dot.style.animation='pulse 2s infinite';
+    labelEl.style.color='#4a9a5a'; labelTxt.textContent='Session in Progress';
+    infoBox.style.display='block'; noteArea.style.display='block';
+    btn.style.border='1px solid #3a7a45'; btn.style.background='rgba(58,122,69,0.12)'; btn.style.color='#5aaa6a'; btn.textContent='Clock Out';
+    if(activeEntry){
+      const ci=new Date(activeEntry.clockIn);
+      document.getElementById('clocked-in-time').textContent=formatTime(ci);
+      document.getElementById('clocked-in-date').textContent=formatDate(ci);
+    }
+  } else {
+    card.style.background='linear-gradient(135deg,#180d0d 0%,#0f0909 100%)';
+    card.style.border='1px solid #352020';
+    glow.style.background='linear-gradient(90deg,transparent,#7a3535,transparent)';
+    dot.style.background='#8a4a4a'; dot.style.boxShadow='none'; dot.style.animation='none';
+    labelEl.style.color='#8a4a4a'; labelTxt.textContent='Ready to Clock In';
+    infoBox.style.display='none'; noteArea.style.display='none';
+    btn.style.border='1px solid #b06030'; btn.style.background='rgba(176,96,48,0.12)'; btn.style.color='#d07840'; btn.textContent='Clock In';
+  }
+
+  const completed=entries.filter(e=>e.clockOut);
+  document.getElementById('stat-sessions').textContent=completed.length;
+  const totalMs=completed.reduce((s,e)=>s+(new Date(e.clockOut)-new Date(e.clockIn)),0);
+  document.getElementById('stat-total').textContent=formatDurationShort(totalMs);
+  const sheetsEl=document.getElementById('stat-sheets');
+  sheetsEl.textContent=connected?'✓ Live':'—';
+  sheetsEl.style.color=connected?'#4a9a5a':'#b8a898';
+}
+
+// ── Render History Tab ────────────────────────────────────
+function renderHistory(){
+  const connected=!!webhookUrl;
+  const list=document.getElementById('history-list');
+  const emptyMsg=document.getElementById('history-empty');
+  const clearWrap=document.getElementById('history-clear-wrap');
+  list.innerHTML='';
+
+  const completed=entries.filter(e=>e.clockOut);
+  const hasAny=entries.length>0;
+  emptyMsg.style.display=hasAny?'none':'block';
+  clearWrap.style.display=hasAny?'block':'none';
+
+  // Show all entries newest first, including the active open session
+  const sorted=[...entries].sort((a,b)=>new Date(b.clockIn)-new Date(a.clockIn));
+
+  sorted.forEach(entry=>{
+    const ci=new Date(entry.clockIn);
+    const co=entry.clockOut?new Date(entry.clockOut):null;
+    const isOpen=!entry.clockOut;
+    const ms=co?co-ci:null;
+
+    const card=document.createElement('div');
+    card.className='session-card'+(isOpen?' active-session':'');
+
+    const syncBadge=entry.synced
+      ?`<span class="badge-synced">✓ Sheets</span>`
+      :(entry.clockOut&&connected?`<span class="badge-unsynced">⚠ Not synced</span>`:'');
+
+    const activeBadge=isOpen?`<span class="badge-active">Active</span>`:'';
+
+    const noteHtml=entry.note?`<div class="session-note">📝 ${entry.note}</div>`:'';
+
+    card.innerHTML=`
+      <div class="session-header">
+        <div class="session-date-group">
+          <div class="session-day">${formatDayName(ci)}</div>
+          <div class="session-full-date">${formatMonthDay(ci)}</div>
+        </div>
+        <div class="session-right">
+          <div class="session-duration-big">${ms?formatDurationShort(ms):'In progress'}</div>
+          <div class="session-duration-label">${ms?'duration':'active session'}</div>
+        </div>
+      </div>
+      <div class="session-divider"></div>
+      <div class="session-body">
+        <div class="time-row">
+          <div class="time-block">
+            <div class="time-block-label">Clocked In</div>
+            <div class="time-block-value">${formatTime(ci)}</div>
+          </div>
+          ${co?`
+          <div class="time-block">
+            <div class="time-block-label">Clocked Out</div>
+            <div class="time-block-value">${formatTime(co)}</div>
+          </div>
+          <div class="time-block">
+            <div class="time-block-label">Total Time</div>
+            <div class="time-block-value" style="color:#9abaaa">${formatDuration(ms)}</div>
+          </div>`:''}
+        </div>
+        ${noteHtml}
+      </div>
+      <div class="session-footer">
+        <div class="session-badges">${activeBadge}${syncBadge}</div>
+        ${!isOpen?`<button class="session-delete" data-id="${entry.id}">Delete</button>`:''}
+      </div>
+    `;
+    list.appendChild(card);
+  });
+
+  list.querySelectorAll('.session-delete').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const id=parseInt(btn.dataset.id);
+      entries=entries.filter(e=>e.id!==id);
+      saveEntries(); renderClock(); renderHistory();
+    });
+  });
+}
+
+function render(){ renderClock(); renderHistory(); }
+
+// ── Actions ───────────────────────────────────────────────
+function handleClockIn(){
+  const entry={id:Date.now(),clockIn:new Date().toISOString(),clockOut:null,note:'',synced:false};
+  entries.unshift(entry); activeEntry=entry; isClockedIn=true;
+  document.getElementById('note-area').value='';
+  document.getElementById('sync-status').style.display='none';
+  saveEntries(); render();
+}
+
+async function handleClockOut(){
+  const co=new Date().toISOString();
+  const note=document.getElementById('note-area').value;
+  const finished={...activeEntry,clockOut:co,note,synced:false};
+  entries=entries.map(e=>e.id===activeEntry.id?finished:e);
+  isClockedIn=false; activeEntry=null;
+  saveEntries(); render();
+  if(webhookUrl){
+    showSync('syncing');
+    try{
+      await sendToSheet(finished);
+      entries=entries.map(e=>e.id===finished.id?{...e,synced:true}:e);
+      saveEntries(); render(); showSync('ok');
+      setTimeout(()=>{ document.getElementById('sync-status').style.display='none'; },3000);
+    }catch{ showSync('error'); }
+  }
+}
+
+function showSync(s){
+  const el=document.getElementById('sync-status'); el.style.display='block';
+  if(s==='syncing'){el.style.color='#7a7a9a';el.textContent='↑ Syncing to Google Sheets...';}
+  else if(s==='ok'){el.style.color='#4a9a5a';el.textContent='✓ Logged to Google Sheets';}
+  else{el.style.color='#9a4a4a';el.textContent='✕ Sync failed — check your URL in settings';}
+}
+
+// ── Tab switching ─────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('page-'+tab.dataset.tab).classList.add('active');
+  });
+});
+
+// ── Event listeners ───────────────────────────────────────
+document.getElementById('clock-btn').addEventListener('click',()=>{
+  if(isClockedIn) handleClockOut(); else handleClockIn();
+});
+document.getElementById('connect-btn').addEventListener('click',()=>{
+  const p=document.getElementById('setup-panel');
+  p.style.display=p.style.display==='none'?'block':'none';
+  document.getElementById('script-box').style.display='none';
+  document.getElementById('toggle-script-btn').textContent='Show script';
+});
+document.getElementById('toggle-script-btn').addEventListener('click',()=>{
+  const box=document.getElementById('script-box');
+  const showing=box.style.display==='block';
+  box.style.display=showing?'none':'block';
+  document.getElementById('toggle-script-btn').textContent=showing?'Show script':'Hide script';
+  document.getElementById('script-text').textContent=SCRIPT_CODE;
+});
+document.getElementById('copy-script-btn').addEventListener('click',()=>{
+  navigator.clipboard.writeText(SCRIPT_CODE);
+  const btn=document.getElementById('copy-script-btn');
+  btn.textContent='✓ Copied'; btn.style.color='#4a9a5a';
+  setTimeout(()=>{ btn.textContent='Copy'; btn.style.color='#7a7aaa'; },2000);
+});
+document.getElementById('save-webhook-btn').addEventListener('click',()=>{
+  const url=document.getElementById('webhook-input').value.trim();
+  if(!url) return;
+  webhookUrl=url; localStorage.setItem(WEBHOOK_KEY,url);
+  document.getElementById('webhook-input').value='';
+  document.getElementById('setup-panel').style.display='none';
+  render();
+});
+document.getElementById('history-clear-btn').addEventListener('click',()=>{
+  if(confirm('Clear all history?')){
+    entries=[]; isClockedIn=false; activeEntry=null;
+    saveEntries(); render();
+  }
+});
+
+// ── Init ──────────────────────────────────────────────────
+loadState(); render(); updateClock();
+setInterval(updateClock,1000);
+</script>
+</body>
+</html>
