@@ -92,6 +92,9 @@
     .badge-unsynced{font-size:9px;color:#cc8833;}
     .session-delete{background:none;border:none;color:#cccccc;cursor:pointer;font-size:15px;padding:2px 6px;transition:color .2s;font-family:inherit;}
     .session-delete:hover{color:#cc3333;}
+    .session-copy{background:none;border:1px solid #dddddd;border-radius:5px;color:#888888;cursor:pointer;font-size:10px;letter-spacing:.15em;padding:4px 10px;font-family:inherit;transition:all .2s;}
+    .session-copy:hover{background:#f0f7f3;border-color:#1a6b35;color:#1a6b35;}
+    .session-copy.copied{background:#f0f7f3;border-color:#1a6b35;color:#1a6b35;}
 
     #history-clear-wrap{text-align:center;margin-top:8px;padding-bottom:10px;display:none;}
     #history-clear-btn{background:none;border:none;color:#cccccc;cursor:pointer;font-size:10px;letter-spacing:.2em;text-transform:uppercase;font-family:inherit;text-decoration:underline;}
@@ -177,7 +180,10 @@
 
 <!-- HISTORY PAGE -->
 <div id="page-history" class="page">
-  <div id="history-empty">No sessions yet.<br><span style="color:#cccccc;font-size:11px;">Clock in and out to see your history here.</span></div>
+  <div id="copy-all-wrap" style="text-align:right;margin-bottom:12px;display:none;">
+  <button id="copy-all-btn" style="background:none;border:1px solid #dddddd;border-radius:6px;color:#888888;cursor:pointer;font-size:11px;letter-spacing:.15em;padding:7px 14px;font-family:inherit;transition:all .2s;">📋 Copy All Sessions</button>
+</div>
+<div id="history-empty">No sessions yet.<br><span style="color:#cccccc;font-size:11px;">Clock in and out to see your history here.</span></div>
   <div id="history-list"></div>
   <div id="history-clear-wrap"><button id="history-clear-btn">Clear All History</button></div>
 </div>
@@ -358,6 +364,8 @@ function renderHistory(){
   const hasAny=entries.length>0;
   emptyMsg.style.display=hasAny?'none':'block';
   clearWrap.style.display=hasAny?'block':'none';
+  const copyAllWrap=document.getElementById('copy-all-wrap');
+  if(copyAllWrap) copyAllWrap.style.display=completed.length>0?'block':'none';
 
   // Show all entries newest first, including the active open session
   const sorted=[...entries].sort((a,b)=>new Date(b.clockIn)-new Date(a.clockIn));
@@ -411,10 +419,28 @@ function renderHistory(){
       </div>
       <div class="session-footer">
         <div class="session-badges">${activeBadge}${syncBadge}</div>
-        ${!isOpen?`<button class="session-delete" data-id="${entry.id}">Delete</button>`:''}
+        <div style="display:flex;gap:8px;align-items:center;">
+          ${!isOpen?'':`<button class="session-copy" data-id="${entry.id}">📋 Copy Row</button>`}
+          ${!isOpen?`<button class="session-delete" data-id="${entry.id}">Delete</button>`:''}
+        </div>
       </div>
     `;
     list.appendChild(card);
+  });
+
+  list.querySelectorAll('.session-copy').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const id=parseInt(btn.dataset.id);
+      const entry=entries.find(e=>e.id===id);
+      if(!entry||!entry.clockOut) return;
+      const ci=new Date(entry.clockIn), co=new Date(entry.clockOut);
+      const ms=co-ci, s=Math.floor(ms/1000);
+      const dur=pad(Math.floor(s/3600))+':'+pad(Math.floor((s%3600)/60))+':'+pad(s%60);
+      const row=[formatDate(ci), formatTime(ci), formatTime(co), dur, entry.note||''].join('\t');
+      navigator.clipboard.writeText(row);
+      btn.textContent='✓ Copied!'; btn.classList.add('copied');
+      setTimeout(()=>{ btn.textContent='📋 Copy Row'; btn.classList.remove('copied'); },2000);
+    });
   });
 
   list.querySelectorAll('.session-delete').forEach(btn=>{
@@ -508,6 +534,22 @@ document.getElementById('history-clear-btn').addEventListener('click',()=>{
     entries=[]; isClockedIn=false; activeEntry=null;
     saveEntries(); render();
   }
+});
+
+document.getElementById('copy-all-btn').addEventListener('click',()=>{
+  const completed=entries.filter(e=>e.clockOut).sort((a,b)=>new Date(b.clockIn)-new Date(a.clockIn));
+  if(!completed.length) return;
+  const header='Date\tClock In\tClock Out\tDuration\tNotes';
+  const rows=completed.map(entry=>{
+    const ci=new Date(entry.clockIn), co=new Date(entry.clockOut);
+    const ms=co-ci, s=Math.floor(ms/1000);
+    const dur=pad(Math.floor(s/3600))+':'+pad(Math.floor((s%3600)/60))+':'+pad(s%60);
+    return [formatDate(ci),formatTime(ci),formatTime(co),dur,entry.note||''].join('\t');
+  });
+  navigator.clipboard.writeText([header,...rows].join('\n'));
+  const btn=document.getElementById('copy-all-btn');
+  btn.textContent='✓ Copied All!'; btn.style.color='#1a6b35'; btn.style.borderColor='#1a6b35';
+  setTimeout(()=>{ btn.textContent='📋 Copy All Sessions'; btn.style.color='#888888'; btn.style.borderColor='#dddddd'; },2500);
 });
 
 // ── Init ──────────────────────────────────────────────────
